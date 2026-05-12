@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FinLens AI — Analisis Laporan Keuangan</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #F7F8FA;
+    --bg-card:   #FFFFFF;
+    --bg-surface:#F0F2F5;
+    --text:      #111827;
+    --text-2:    #6B7280;
+    --text-3:    #9CA3AF;
+    --border:    rgba(0,0,0,0.10);
+    --border-2:  rgba(0,0,0,0.18);
+    --navy:      #1A3A5C;
+    --teal:      #1D9E75;
+    --gold:      #F5A623;
+    --red:       #C0392B;
+    --warn:      #EF9F27;
+    --info-bg:   #EBF5FF;
+    --info-text: #185FA5;
+    --danger-bg: #FCEBEB;
+    --danger-txt:#A32D2D;
+    --rad-md:    8px;
+    --rad-lg:    12px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
+  a{color:var(--info-text);text-decoration:none}
+
+  .app{max-width:820px;margin:0 auto;padding:1.5rem 1rem 4rem}
+
+  /* header */
+  .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;padding-bottom:1rem;border-bottom:0.5px solid var(--border)}
+  .logo{display:flex;align-items:center;gap:10px}
+  .logo-mark{width:34px;height:34px;background:var(--navy);border-radius:8px;display:flex;align-items:center;justify-content:center}
+  .logo-mark i{color:var(--gold);font-size:18px}
+  .logo-text{font-family:'DM Serif Display',serif;font-size:20px;color:var(--text)}
+  .logo-text span{color:var(--teal)}
+  .badge{font-size:11px;padding:4px 12px;background:var(--info-bg);color:var(--info-text);border-radius:20px;font-weight:500}
+
+  /* hero */
+  .hero{text-align:center;margin-bottom:2rem}
+  .hero h1{font-family:'DM Serif Display',serif;font-size:30px;line-height:1.3;margin-bottom:.5rem;color:var(--text)}
+  .hero p{font-size:14px;color:var(--text-2);max-width:480px;margin:0 auto;line-height:1.7}
+
+  /* api key banner */
+  .apikey-wrap{background:var(--info-bg);border:0.5px solid var(--info-text);border-radius:var(--rad-lg);padding:1rem 1.25rem;margin-bottom:1.25rem}
+  .apikey-label{font-size:12px;font-weight:500;color:var(--info-text);margin-bottom:.5rem;display:flex;align-items:center;gap:6px}
+  .apikey-row{display:flex;gap:8px}
+  .apikey-row input{flex:1;padding:.55rem .75rem;border-radius:var(--rad-md);border:0.5px solid var(--border-2);font-size:13px;font-family:'DM Mono',monospace;background:var(--bg-card);color:var(--text);outline:none}
+  .apikey-row input:focus{border-color:var(--navy)}
+  .apikey-row button{padding:.55rem 1rem;background:var(--navy);color:white;border:none;border-radius:var(--rad-md);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;font-family:'Plus Jakarta Sans',sans-serif}
+  .apikey-row button:hover{background:#2a5278}
+  .apikey-note{font-size:11px;color:var(--info-text);margin-top:.5rem;opacity:.8}
+  .key-saved{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--teal);font-weight:500}
+
+  /* upload */
+  .upload-zone{border:1.5px dashed var(--border-2);border-radius:var(--rad-lg);padding:2.5rem 2rem;text-align:center;cursor:pointer;transition:all .2s;background:var(--bg-card);margin-bottom:1rem;position:relative}
+  .upload-zone:hover,.upload-zone.drag{border-color:var(--teal);background:var(--bg-surface)}
+  .upload-zone.has-file{border-style:solid;border-color:var(--teal)}
+  .upload-icon{font-size:38px;color:var(--text-3);margin-bottom:.75rem;display:block}
+  .upload-zone.has-file .upload-icon{color:var(--teal)}
+  .upload-title{font-size:15px;font-weight:500;margin-bottom:.25rem;color:var(--text)}
+  .upload-sub{font-size:13px;color:var(--text-2)}
+  .file-input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+
+  .file-info{display:flex;align-items:center;gap:10px;background:var(--bg-surface);border-radius:var(--rad-md);padding:.75rem 1rem;margin-bottom:1rem}
+  .file-info i{color:var(--teal);font-size:20px;flex-shrink:0}
+  .file-name{font-size:13px;font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
+  .file-size{font-size:12px;color:var(--text-3);font-family:'DM Mono',monospace}
+  .remove-btn{background:none;border:none;cursor:pointer;color:var(--text-3);padding:2px;font-size:16px;display:flex}
+  .remove-btn:hover{color:var(--red)}
+
+  .analyze-btn{width:100%;padding:.9rem;background:var(--navy);color:white;border:none;border-radius:var(--rad-md);font-size:15px;font-weight:500;cursor:pointer;transition:all .2s;font-family:'Plus Jakarta Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px}
+  .analyze-btn:hover:not(:disabled){background:#2a5278}
+  .analyze-btn:disabled{opacity:.45;cursor:not-allowed}
+  .analyze-btn.loading{background:var(--teal)}
+
+  .spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* results */
+  .results{margin-top:1.5rem;display:flex;flex-direction:column;gap:1rem;animation:fadeIn .4s ease}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+  .result-card{background:var(--bg-card);border:0.5px solid var(--border);border-radius:var(--rad-lg);overflow:hidden}
+  .result-card-header{display:flex;align-items:center;gap:10px;padding:1rem 1.25rem;border-bottom:0.5px solid var(--border)}
+  .result-card-header i{font-size:18px;color:var(--text-2)}
+  .result-card-header h3{font-size:14px;font-weight:500;color:var(--text)}
+  .result-card-body{padding:1rem 1.25rem}
+  .summary-text{font-size:14px;line-height:1.8;color:var(--text)}
+
+  .ratios-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:10px}
+  .ratio-item{background:var(--bg-surface);border-radius:var(--rad-md);padding:.85rem 1rem}
+  .ratio-label{font-size:11px;color:var(--text-3);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+  .ratio-value{font-family:'DM Mono',monospace;font-size:20px;font-weight:500;margin-bottom:4px}
+  .ratio-value.good{color:#1D9E75}
+  .ratio-value.warn{color:#EF9F27}
+  .ratio-value.bad{color:#C0392B}
+  .ratio-note{font-size:11px;color:var(--text-2);line-height:1.4}
+
+  .swot-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .swot-item{border-radius:var(--rad-md);padding:.85rem 1rem}
+  .swot-item.strength{background:#F0FAF6;border-left:3px solid #1D9E75;border-radius:0 var(--rad-md) var(--rad-md) 0}
+  .swot-item.risk{background:#FCEBEB;border-left:3px solid #C0392B;border-radius:0 var(--rad-md) var(--rad-md) 0}
+  .swot-title{font-size:12px;font-weight:500;margin-bottom:.5rem;display:flex;align-items:center;gap:4px}
+  .swot-title.strength{color:#0F6E56}
+  .swot-title.risk{color:#A32D2D}
+  .swot-item ul{list-style:none;padding:0}
+  .swot-item ul li{font-size:13px;color:#1a1a1a;padding:3px 0;display:flex;gap:6px;line-height:1.4}
+  .swot-item ul li::before{content:"•";opacity:.4;flex-shrink:0}
+
+  .recs-list{display:flex;flex-direction:column;gap:8px}
+  .rec-item{display:flex;gap:10px;align-items:flex-start;padding:.75rem 1rem;background:var(--bg-surface);border-radius:var(--rad-md)}
+  .rec-num{width:22px;height:22px;background:var(--navy);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0;margin-top:1px}
+  .rec-text{font-size:13px;line-height:1.6;color:var(--text)}
+
+  .verdict{display:flex;align-items:center;gap:12px;padding:1rem 1.25rem;border-radius:var(--rad-md);margin-top:.5rem}
+  .verdict.healthy{background:#F0FAF6;border:0.5px solid #5DCAA5}
+  .verdict.warning{background:#FAEEDA;border:0.5px solid #EF9F27}
+  .verdict.critical{background:#FCEBEB;border:0.5px solid #F09595}
+  .verdict i{font-size:28px;flex-shrink:0}
+  .verdict.healthy i{color:#1D9E75}
+  .verdict.warning i{color:#EF9F27}
+  .verdict.critical i{color:#C0392B}
+  .verdict-label{font-size:11px;color:var(--text-2);margin-bottom:2px}
+  .verdict-text{font-size:14px;font-weight:500}
+  .verdict.healthy .verdict-text{color:#085041}
+  .verdict.warning .verdict-text{color:#633806}
+  .verdict.critical .verdict-text{color:#501313}
+
+  /* plans */
+  .section-label{font-size:11px;font-weight:500;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin:2rem 0 .75rem}
+  .plans{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .plan{background:var(--bg-card);border:0.5px solid var(--border);border-radius:var(--rad-lg);padding:1rem 1.25rem}
+  .plan.featured{border:2px solid var(--info-text)}
+  .plan-badge{font-size:11px;padding:3px 10px;background:var(--info-bg);color:var(--info-text);border-radius:20px;display:inline-block;margin-bottom:.75rem}
+  .plan-name{font-size:15px;font-weight:500;margin-bottom:.25rem;color:var(--text)}
+  .plan-price{font-family:'DM Mono',monospace;font-size:22px;font-weight:500;color:var(--text);margin-bottom:.75rem}
+  .plan-price span{font-size:13px;font-weight:400;color:var(--text-2)}
+  .plan-features{list-style:none;padding:0;display:flex;flex-direction:column;gap:6px}
+  .plan-features li{font-size:12px;color:var(--text-2);display:flex;align-items:center;gap:6px}
+  .plan-features li i{color:var(--teal);font-size:14px}
+  .plan-btn{margin-top:1rem;width:100%;padding:.6rem;border-radius:var(--rad-md);font-size:13px;font-weight:500;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .2s}
+  .plan-btn.primary{background:var(--navy);color:white;border:none}
+  .plan-btn.primary:hover{background:#2a5278}
+  .plan-btn.outline{background:transparent;border:0.5px solid var(--border-2);color:var(--text)}
+  .plan-btn.outline:hover{background:var(--bg-surface)}
+
+  .error-box{background:var(--danger-bg);border:0.5px solid #F09595;border-radius:var(--rad-md);padding:1rem 1.25rem;font-size:13px;color:var(--danger-txt);display:flex;gap:8px;align-items:flex-start;margin-top:.75rem}
+
+  .export-btn{margin-top:.75rem;padding:.55rem 1.1rem;background:transparent;border:0.5px solid var(--border-2);border-radius:var(--rad-md);font-size:13px;font-weight:500;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;color:var(--text-2);display:inline-flex;align-items:center;gap:6px;transition:all .15s}
+  .export-btn:hover{background:var(--bg-surface)}
+
+  footer{text-align:center;margin-top:3rem;font-size:12px;color:var(--text-3)}
+  footer a{color:var(--text-3)}
+
+  @media(max-width:600px){
+    .swot-grid{grid-template-columns:1fr}
+    .plans{grid-template-columns:1fr}
+    .hero h1{font-size:24px}
+    .apikey-row{flex-direction:column}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="header">
+    <div class="logo">
+      <div class="logo-mark"><i class="ti ti-chart-line" aria-hidden="true"></i></div>
+      <div class="logo-text">Fin<span>Lens</span> <small style="font-family:'Plus Jakarta Sans';font-size:12px;color:var(--text-3);font-weight:400">AI</small></div>
+    </div>
+    <span class="badge"><i class="ti ti-sparkles" style="font-size:12px" aria-hidden="true"></i> Powered by Claude AI</span>
+  </header>
+
+  <div class="hero">
+    <h1>Analisis laporan keuangan<br>dalam hitungan detik</h1>
+    <p>Upload laporan keuangan perusahaan — AI langsung membaca, menghitung rasio, dan memberikan insight seperti analis profesional.</p>
+  </div>
+
+  <!-- API Key Setup -->
+  <div class="apikey-wrap" id="apikey-section">
+    <div class="apikey-label"><i class="ti ti-key" style="font-size:14px"></i> Masukkan Anthropic API Key kamu</div>
+    <div class="apikey-row">
+      <input type="password" id="apikey-input" placeholder="sk-ant-..." autocomplete="off" />
+      <button onclick="saveKey()">Simpan</button>
+    </div>
+    <div class="apikey-note">
+      API key tersimpan di browser kamu saja — tidak dikirim ke server manapun.<br>
+      Dapatkan API key gratis di <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>
+    </div>
+  </div>
+
+  <!-- Upload Zone -->
+  <div id="upload-zone" class="upload-zone">
+    <input type="file" class="file-input" id="file-input" accept=".pdf,.png,.jpg,.jpeg,.webp" />
+    <i class="ti ti-file-upload upload-icon" aria-hidden="true"></i>
+    <div class="upload-title" id="upload-title">Upload laporan keuangan</div>
+    <div class="upload-sub" id="upload-sub">PDF, PNG, JPG · Drag & drop atau klik untuk pilih · Maks 10MB</div>
+  </div>
+
+  <div id="file-info" class="file-info" style="display:none">
+    <i class="ti ti-file-text" aria-hidden="true"></i>
+    <span class="file-name" id="file-name-display"></span>
+    <span class="file-size" id="file-size-display"></span>
+    <button class="remove-btn" id="remove-btn" aria-label="Hapus file"><i class="ti ti-x" aria-hidden="true"></i></button>
+  </div>
+
+  <button class="analyze-btn" id="analyze-btn" disabled>
+    <i class="ti ti-sparkles" aria-hidden="true"></i> Analisis Sekarang
+  </button>
+
+  <div id="error-container"></div>
+  <div id="results-container"></div>
+
+  <p class="section-label">Pilihan paket berlangganan</p>
+  <div class="plans">
+    <div class="plan">
+      <div class="plan-name">Starter</div>
+      <div class="plan-price">Rp 49K <span>/bulan</span></div>
+      <ul class="plan-features">
+        <li><i class="ti ti-check" aria-hidden="true"></i> 10 analisis/bulan</li>
+        <li><i class="ti ti-check" aria-hidden="true"></i> Rasio keuangan dasar</li>
+        <li><i class="ti ti-check" aria-hidden="true"></i> Ringkasan eksekutif</li>
+        <li><i class="ti ti-check" aria-hidden="true"></i> Export PDF</li>
+      </ul>
+      <button class="plan-btn outline">Mulai gratis 7 hari</button>
+    </div>
+    <div class="plan featured">
+      <div class="plan-badge"><i class="ti ti-star" style="font-size:11px" aria-hidden="true"></i> Paling populer</div>
+      <div class="plan-name">Pro</div>
+      <div class="plan-price">Rp 99K <span>/bulan</span></div>
+      <ul class="plan-features">
+        <li><i class="ti ti-check" aria-hidden="true"></i> Analisis tak terbatas</li>
+        <li><i class="ti ti-check" aria-hidden="true"></i> Semua rasio + DCF</li>
+        <li><i class="ti ti-check" aria-hidden="true"></i> Perbandingan industri</li>
+        <li><i class="ti ti-check" aria-hidden="true"></i> Rekomendasi investasi</li>
+        <li><i class="ti ti-check" aria-hidden="true"></i> Chatbot tanya-jawab</li>
+      </ul>
+      <button class="plan-btn primary">Pilih Pro</button>
+    </div>
+    <div class="plan">
+      <div class="plan-name">Kampus</div>
+      <div class="plan-price">Rp 299K <span>/bulan</span></div>
+      <ul class="plan-features">
+        <li><i class="ti ti-check" aria-hidden="true"></i> 50 akun mahasiswa</li>
+        <li><i class="ti ti-check" aria-hidden="true"></i> Dashboard dosen</li>
+        <li><i class="ti ti-check" aria-hidden="true"></i> Studi kasus kurikulum</li>
+        <li><i class="ti ti-check" aria-hidden="true"></i> Laporan aktivitas</li>
+        <li><i class="ti ti-check" aria-hidden="true"></i> Onboarding khusus</li>
+      </ul>
+      <button class="plan-btn outline">Hubungi kami</button>
+    </div>
+  </div>
+
+  <footer>
+    <p>© 2025 FinLens AI · Dibuat dengan Claude AI · <a href="mailto:hello@finlens.ai">hello@finlens.ai</a></p>
+  </footer>
+
+</div>
+
+<script>
+let uploadedFile = null;
+let base64Data   = null;
+let apiKey       = localStorage.getItem('fl_apikey') || '';
+
+const uploadZone  = document.getElementById('upload-zone');
+const fileInput   = document.getElementById('file-input');
+const fileInfo    = document.getElementById('file-info');
+const analyzeBtn  = document.getElementById('analyze-btn');
+const errorCont   = document.getElementById('error-container');
+const resultsCont = document.getElementById('results-container');
+const apiSection  = document.getElementById('apikey-section');
+
+function initKeyUI() {
+  if (apiKey) {
+    apiSection.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between">
+      <span class="key-saved"><i class="ti ti-circle-check" style="font-size:15px"></i> API key tersimpan</span>
+      <button onclick="clearKey()" style="background:none;border:none;cursor:pointer;font-size:12px;color:var(--text-3);font-family:'Plus Jakarta Sans',sans-serif">Ganti key</button>
+    </div>`;
+    checkAnalyzeBtn();
+  }
+}
+
+window.saveKey = function() {
+  const val = document.getElementById('apikey-input').value.trim();
+  if (!val.startsWith('sk-ant-')) { alert('API key tidak valid. Harus diawali dengan sk-ant-'); return; }
+  apiKey = val;
+  localStorage.setItem('fl_apikey', apiKey);
+  initKeyUI();
+};
+
+window.clearKey = function() {
+  apiKey = '';
+  localStorage.removeItem('fl_apikey');
+  apiSection.innerHTML = `
+    <div class="apikey-label"><i class="ti ti-key" style="font-size:14px"></i> Masukkan Anthropic API Key kamu</div>
+    <div class="apikey-row">
+      <input type="password" id="apikey-input" placeholder="sk-ant-..." autocomplete="off" />
+      <button onclick="saveKey()">Simpan</button>
+    </div>
+    <div class="apikey-note">
+      API key tersimpan di browser kamu saja — tidak dikirim ke server manapun.<br>
+      Dapatkan API key gratis di <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>
+    </div>`;
+  analyzeBtn.disabled = true;
+};
+
+function checkAnalyzeBtn() {
+  analyzeBtn.disabled = !(uploadedFile && apiKey);
+}
+
+function formatSize(b) {
+  if (b < 1024) return b + ' B';
+  if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
+  return (b/1048576).toFixed(1) + ' MB';
+}
+
+function setFile(file) {
+  if (!file) return;
+  if (file.size > 10*1024*1024) { showError('File terlalu besar. Maksimal 10MB.'); return; }
+  uploadedFile = file;
+  document.getElementById('file-name-display').textContent = file.name;
+  document.getElementById('file-size-display').textContent = formatSize(file.size);
+  fileInfo.style.display = 'flex';
+  uploadZone.classList.add('has-file');
+  document.getElementById('upload-title').textContent = 'File siap dianalisis';
+  document.getElementById('upload-sub').textContent = file.name;
+  errorCont.innerHTML = '';
+  resultsCont.innerHTML = '';
+  const reader = new FileReader();
+  reader.onload = e => { base64Data = e.target.result.split(',')[1]; checkAnalyzeBtn(); };
+  reader.readAsDataURL(file);
+}
+
+fileInput.addEventListener('change', e => { if (e.target.files[0]) setFile(e.target.files[0]); });
+
+document.getElementById('remove-btn').addEventListener('click', () => {
+  uploadedFile = null; base64Data = null;
+  fileInput.value = '';
+  fileInfo.style.display = 'none';
+  uploadZone.classList.remove('has-file');
+  document.getElementById('upload-title').textContent = 'Upload laporan keuangan';
+  document.getElementById('upload-sub').textContent = 'PDF, PNG, JPG · Drag & drop atau klik untuk pilih · Maks 10MB';
+  analyzeBtn.disabled = true;
+  resultsCont.innerHTML = '';
+});
+
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag'));
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault(); uploadZone.classList.remove('drag');
+  if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
+});
+
+function showError(msg) {
+  errorCont.innerHTML = `<div class="error-box"><i class="ti ti-alert-circle"></i><span>${msg}</span></div>`;
+}
+
+analyzeBtn.addEventListener('click', async () => {
+  if (!uploadedFile || !base64Data || !apiKey) return;
+  analyzeBtn.disabled = true;
+  analyzeBtn.classList.add('loading');
+  analyzeBtn.innerHTML = '<div class="spinner"></div> Menganalisis laporan...';
+  errorCont.innerHTML = '';
+  resultsCont.innerHTML = '';
+
+  const isPDF = uploadedFile.type === 'application/pdf';
+  const mediaType = isPDF ? 'application/pdf' : uploadedFile.type;
+  const fileContent = isPDF
+    ? { type:'document', source:{ type:'base64', media_type:mediaType, data:base64Data } }
+    : { type:'image',    source:{ type:'base64', media_type:mediaType, data:base64Data } };
+
+  const systemPrompt = `Kamu adalah analis keuangan senior yang menganalisis laporan keuangan untuk mahasiswa finance di Indonesia. Baca laporan keuangan yang diupload dan berikan analisis edukatif yang mudah dipahami.
+
+Respond ONLY with a valid JSON object, no markdown backticks, no preamble, no extra text:
+{
+  "company": "nama perusahaan",
+  "period": "periode laporan misal Q3 2024",
+  "summary": "ringkasan eksekutif 2-3 kalimat tentang kondisi keuangan",
+  "ratios": [
+    {"label":"Current Ratio","value":"2.1x","status":"good","note":"kemampuan bayar utang jangka pendek sangat baik"},
+    {"label":"Nama Rasio","value":"angka atau N/A","status":"good|warn|bad","note":"interpretasi singkat"}
+  ],
+  "strengths": ["kekuatan 1","kekuatan 2","kekuatan 3"],
+  "risks": ["risiko 1","risiko 2","risiko 3"],
+  "recommendations": ["pelajari konsep X karena relevan dengan kondisi ini","rekomendasi belajar 2","rekomendasi 3"],
+  "verdict": "healthy|warning|critical",
+  "verdict_text": "kesimpulan 1 kalimat kondisi keseluruhan"
+}
+
+Sertakan minimal 6 rasio (likuiditas, profitabilitas, solvabilitas, efisiensi). Kalau data tidak tersedia, tandai sebagai N/A.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'x-api-key': apiKey, 'anthropic-version':'2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1500,
+        system: systemPrompt,
+        messages: [{ role:'user', content:[fileContent, { type:'text', text:'Analisis laporan keuangan ini dan berikan JSON sesuai format.' }] }]
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(()=>({}));
+      if (res.status === 401) throw new Error('API key tidak valid. Periksa kembali di console.anthropic.com');
+      throw new Error(err.error?.message || `Error ${res.status}`);
+    }
+
+    const data = await res.json();
+    const raw  = data.content?.find(b => b.type==='text')?.text || '';
+    const clean = raw.replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(clean);
+    renderResults(parsed);
+
+  } catch(err) {
+    if (err.message.includes('JSON')) {
+      showError('AI tidak bisa membaca file ini. Pastikan file adalah laporan keuangan yang jelas terbaca.');
+    } else {
+      showError(err.message);
+    }
+  } finally {
+    analyzeBtn.disabled = false;
+    analyzeBtn.classList.remove('loading');
+    analyzeBtn.innerHTML = '<i class="ti ti-sparkles"></i> Analisis Sekarang';
+    checkAnalyzeBtn();
+  }
+});
+
+function vClass(v){ return v==='healthy'?'healthy':v==='warning'?'warning':'critical'; }
+function vIcon(v) { return v==='healthy'?'ti-circle-check':v==='warning'?'ti-alert-triangle':'ti-circle-x'; }
+function vLabel(v){ return v==='healthy'?'Kondisi Keuangan':v==='warning'?'Perlu Perhatian':'Kondisi Kritis'; }
+
+function renderResults(d) {
+  const ratioHTML = (d.ratios||[]).map(r=>`
+    <div class="ratio-item">
+      <div class="ratio-label">${r.label}</div>
+      <div class="ratio-value ${r.status||'warn'}">${r.value}</div>
+      <div class="ratio-note">${r.note}</div>
+    </div>`).join('');
+
+  const strengthsHTML = (d.strengths||[]).map(s=>`<li>${s}</li>`).join('');
+  const risksHTML     = (d.risks||[]).map(s=>`<li>${s}</li>`).join('');
+  const recsHTML      = (d.recommendations||[]).map((r,i)=>`
+    <div class="rec-item">
+      <div class="rec-num">${i+1}</div>
+      <div class="rec-text">${r}</div>
+    </div>`).join('');
+
+  const vc = vClass(d.verdict);
+
+  resultsCont.innerHTML = `
+    <div class="results">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.25rem;flex-wrap:wrap;gap:8px">
+        <div>
+          <div style="font-size:16px;font-weight:500;color:var(--text)">${d.company||'Laporan Keuangan'}</div>
+          <div style="font-size:13px;color:var(--text-2)">${d.period||''}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="export-btn" onclick="window.print()"><i class="ti ti-printer" style="font-size:14px"></i> Print / Save PDF</button>
+        </div>
+      </div>
+
+      <div class="verdict ${vc}">
+        <i class="ti ${vIcon(d.verdict)}"></i>
+        <div>
+          <div class="verdict-label">${vLabel(d.verdict)}</div>
+          <div class="verdict-text">${d.verdict_text||''}</div>
+        </div>
+      </div>
+
+      <div class="result-card">
+        <div class="result-card-header"><i class="ti ti-align-left"></i><h3>Ringkasan Eksekutif</h3></div>
+        <div class="result-card-body"><p class="summary-text">${d.summary||''}</p></div>
+      </div>
+
+      <div class="result-card">
+        <div class="result-card-header"><i class="ti ti-calculator"></i><h3>Rasio Keuangan Utama</h3></div>
+        <div class="result-card-body">
+          <div class="ratios-grid">${ratioHTML}</div>
+          <div style="margin-top:.75rem;font-size:11px;color:var(--text-3);display:flex;gap:1rem;flex-wrap:wrap">
+            <span><span style="color:#1D9E75">■</span> Baik</span>
+            <span><span style="color:#EF9F27">■</span> Perlu perhatian</span>
+            <span><span style="color:#C0392B">■</span> Kritis</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="result-card">
+        <div class="result-card-header"><i class="ti ti-analyze"></i><h3>Kekuatan &amp; Risiko</h3></div>
+        <div class="result-card-body">
+          <div class="swot-grid">
+            <div class="swot-item strength">
+              <div class="swot-title strength"><i class="ti ti-trending-up" style="font-size:13px"></i> Kekuatan</div>
+              <ul>${strengthsHTML}</ul>
+            </div>
+            <div class="swot-item risk">
+              <div class="swot-title risk"><i class="ti ti-alert-triangle" style="font-size:13px"></i> Risiko</div>
+              <ul>${risksHTML}</ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="result-card">
+        <div class="result-card-header"><i class="ti ti-school"></i><h3>Rekomendasi Belajar untuk Mahasiswa</h3></div>
+        <div class="result-card-body"><div class="recs-list">${recsHTML}</div></div>
+      </div>
+    </div>`;
+}
+
+initKeyUI();
+</script>
+</body>
+</html>
